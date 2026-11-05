@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-Notation – Code-Challenge</title>
+<style>
+:root{color-scheme:light;--ink:#172033;--muted:#64748b;--line:#dbe2ea;--bg:#f4f7fb;--panel:#fff;--accent:#2459a9;--soft:#eaf1ff;--good:#e8f7ee;--good-ink:#17663b;--bad:#fff0ed;--bad-ink:#a33325}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:850px;margin:0 auto;padding:28px 18px 56px}.eyebrow{font-size:.78rem;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;margin:.35rem 0 .75rem}h2{font-size:1.2rem;margin:0}.intro{color:var(--muted);max-width:68ch}
+.topline{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:24px 0 10px;color:var(--muted);font-size:.9rem}.track{height:7px;background:#e2e8f0;border-radius:99px;overflow:hidden}.track span{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,4vw,30px);margin-top:16px;box-shadow:0 8px 26px #1b2a4410}
+.tag{display:inline-block;border-radius:999px;background:var(--soft);color:var(--accent);padding:4px 10px;font-size:.78rem;font-weight:700;margin-bottom:10px}
+.prompt{font-size:1.08rem;font-weight:650;margin:4px 0 16px}
+pre{overflow:auto;background:#101827;color:#e6edf7;padding:18px;border-radius:12px;font: .92rem/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;margin:0 0 18px}
+.options{display:grid;gap:10px}.option{display:flex;align-items:flex-start;gap:11px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}.option:hover{border-color:#8da9d6}.option:has(input:checked){border-color:var(--accent);background:var(--soft)}.option input{margin-top:5px;accent-color:var(--accent)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}button{border:0;border-radius:10px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}.primary{background:var(--accent);color:white}.secondary{background:#e8edf4;color:var(--ink)}.feedback{margin-top:18px;padding:16px;border-radius:12px;border:1px solid var(--line)}.feedback.good{background:var(--good);color:var(--good-ink);border-color:#b8e4c8}.feedback.bad{background:var(--bad);color:var(--bad-ink);border-color:#f4c7be}.feedback h3{margin:0 0 6px;font-size:1rem}.feedback p{margin:6px 0}.hidden{display:none}.footer{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:18px}.small{font-size:.88rem;color:var(--muted)}.summary-row{padding:12px 0;border-bottom:1px solid var(--line)}.summary-row:last-child{border-bottom:0}.pill{display:inline-block;border-radius:99px;padding:2px 9px;background:#edf2f7;font-size:.8rem;margin-right:6px}
+@media(max-width:560px){main{padding:20px 12px 36px}.footer{align-items:stretch;flex-direction:column}.footer button{width:100%}.topline{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">WJAX · Performance verstehen</div>
+  <h1>O-Notation: Code-Challenge</h1>
+  <p class="intro">Schätze die Zeitkomplexität der Java-Beispiele. Wähle eine Antwort und prüfe sie, bevor du zur nächsten Aufgabe gehst. Entscheidend ist, wie oft die relevante Operation in Abhängigkeit von <code>n</code> ausgeführt wird.</p>
+  <div class="topline"><span id="progressText">Aufgabe 1 von 6</span><span id="scoreText">0 von 0 beantwortet</span></div>
+  <div class="track" aria-hidden="true"><span id="progressBar"></span></div>
+  <section id="quizCard" class="card" aria-live="polite">
+    <span class="tag" id="difficulty">Warm-up</span>
+    <h2 id="questionTitle"></h2>
+    <p class="prompt" id="questionPrompt"></p>
+    <pre><code id="code"></code></pre>
+    <form id="answerForm">
+      <div class="options" id="options"></div>
+      <div class="actions">
+        <button class="primary" type="submit" id="checkButton">Antwort prüfen</button>
+        <button class="secondary" type="button" id="hintButton">Hinweis anzeigen</button>
+      </div>
+    </form>
+    <div id="hint" class="feedback hidden"></div>
+    <div id="feedback" class="feedback hidden" aria-live="polite"></div>
+    <div class="footer">
+      <span class="small" id="answeredNote">Du kannst deine Antwort vor dem Prüfen ändern.</span>
+      <button class="primary" id="nextButton" type="button" disabled>Weiter →</button>
+    </div>
+  </section>
+  <section id="resultCard" class="card hidden">
+    <span class="tag">Abgeschlossen</span>
+    <h2>Dein Ergebnis</h2>
+    <p id="finalScore"></p>
+    <div id="review"></div>
+    <div class="actions"><button class="primary" id="restartButton" type="button">Quiz neu starten</button></div>
+  </section>
+  <p class="small">Hinweis: Wir betrachten die Anzahl der Aufrufe von <code>process()</code> bzw. der Schleifendurchläufe. Diese Operationen werden als konstant teuer angenommen.</p>
+</main>
+<script>
+const questions = [
+ {title:"Aufgabe 1",level:"Warm-up",prompt:"Welche Zeitkomplexität hat der Code?",code:`for (int i = 0; i < n; i++) {\n    for (int j = 0; j < n; j++) {\n        process(i, j);\n    }\n}`,options:["O(1)","O(n)","O(n log n)","O(n²)"],correct:3,hint:"Für jeden Durchlauf der äußeren Schleife läuft die innere Schleife vollständig.",explain:"Die äußere Schleife läuft n-mal, und für jeden Durchlauf läuft die innere ebenfalls n-mal. Das ergibt n · n = n² Aufrufe, also O(n²).",counts:"Bei n = 10 sind es 100 Aufrufe; bei n = 100 sind es 10.000."},
+ {title:"Aufgabe 2",level:"Warm-up",prompt:"Was ändert sich, wenn die innere Schleife immer genau zehnmal läuft?",code:`for (int i = 0; i < n; i++) {\n    for (int j = 0; j < 10; j++) {\n        process(i, j);\n    }\n}`,options:["O(1)","O(log n)","O(n)","O(n²)"],correct:2,hint:"Die Grenze der inneren Schleife hängt nicht von n ab.",explain:"Es gibt 10n Aufrufe. Konstante Faktoren werden in der O-Notation weggelassen, daher O(n).",counts:"Die Zahl der Aufrufe wächst proportional zu n."},
+ {title:"Aufgabe 3",level:"Einfach",prompt:"Wie oft läuft die while-Schleife ungefähr?",code:`int i = 1;\nwhile (i < n) {\n    i *= 2;\n}`,options:["O(1)","O(log n)","O(n)","O(n²)"],correct:1,hint:"Verfolge i: 1, 2, 4, 8, 16, …",explain:"Nach k Durchläufen ist i = 2ᵏ. Die Schleife endet, wenn 2ᵏ mindestens n erreicht; das benötigt ungefähr log₂(n) Durchläufe.",counts:"Verdoppeln erreicht große Grenzen schnell: bei n = 1.024 sind es ungefähr 10 Durchläufe."},
+ {title:"Aufgabe 4",level:"Mittel",prompt:"Welche Komplexität beschreibt die gesamte Ausführung?",code:`for (int i = 0; i < n; i++) {\n    process(i);\n}\n\nfor (int j = 1; j < n; j *= 2) {\n    process(j);\n}`,options:["O(log n)","O(n)","O(n log n)","O(n²)"],correct:1,hint:"Die beiden Schleifen laufen nacheinander, nicht ineinander.",explain:"Die erste Schleife kostet O(n), die zweite O(log n). Bei einer Summe dominiert der schneller wachsende Term: O(n + log n) = O(n).",counts:"Nacheinander ausgeführte Abschnitte werden addiert."},
+ {title:"Aufgabe 5",level:"Knifflig",prompt:"Die while-Schleife steht in der for-Schleife. Ist das automatisch quadratisch?",code:`int j = 0;\nfor (int i = 0; i < n; i++) {\n    while (j < n) {\n        j++;\n    }\n}`,options:["O(1)","O(log n)","O(n)","O(n²)"],correct:2,hint:"Wird j bei jedem Durchlauf der äußeren Schleife wieder auf 0 gesetzt?",explain:"Nein. j wird nur einmal initialisiert und steigt insgesamt höchstens n-mal. Nach dem ersten Durchlauf ist j = n, sodass die while-Bedingung danach falsch bleibt. Die äußere Schleife kostet O(n), insgesamt also O(n).",counts:"Verschachtelte Schleifen sind nicht automatisch quadratisch."},
+ {title:"Aufgabe 6",level:"Knifflig",prompt:"Wie viele Aufrufe entstehen asymptotisch?",code:`for (int i = 1; i < n; i *= 2) {\n    for (int j = 0; j < n; j++) {\n        process(i, j);\n    }\n}`,options:["O(log n)","O(n)","O(n log n)","O(n²)"],correct:2,hint:"Die äußere Schleife verdoppelt i. Wie oft läuft sie, und wie oft läuft die innere pro Runde?",explain:"Die äußere Schleife läuft O(log n)-mal. In jedem Durchlauf wird die innere Schleife n-mal ausgeführt. Insgesamt ergibt das O(n log n).",counts:"Multipliziere die Anzahl der äußeren Durchläufe mit der Arbeit pro Durchlauf."}
+];
+let current = 0;
+const answers = Array(questions.length).fill(null);
+const checked = Array(questions.length).fill(false);
+const $ = id => document.getElementById(id);
+function render(){
+ const q=questions[current];
+ $("progressText").textContent=`Aufgabe ${current+1} von ${questions.length}`;
+ $("scoreText").textContent=`${checked.filter(Boolean).length} von ${questions.length} beantwortet`;
+ $("progressBar").style.width=`${current/questions.length*100}%`;
+ $("difficulty").textContent=q.level;
+ $("questionTitle").textContent=q.title;
+ $("questionPrompt").textContent=q.prompt;
+ $("code").textContent=q.code;
+ $("options").innerHTML="";
+ q.options.forEach((opt,i)=>{
+  const label=document.createElement("label");label.className="option";
+  const radio=document.createElement("input");radio.type="radio";radio.name="answer";radio.value=i;radio.checked=answers[current]===i;radio.disabled=checked[current];
+  radio.addEventListener("change",()=>{answers[current]=i;});
+  const span=document.createElement("span");span.textContent=String.fromCharCode(65+i)+" · "+opt;
+  label.append(radio,span);$("options").append(label);
+ });
+ $("feedback").className="feedback hidden";$("feedback").textContent="";
+ $("hint").className="feedback hidden";$("hint").textContent="";
+ $("hintButton").disabled=checked[current];
+ $("checkButton").disabled=checked[current];
+ $("nextButton").disabled=!checked[current];
+ $("nextButton").textContent=current===questions.length-1?"Ergebnis anzeigen →":"Weiter →";
+ $("answeredNote").textContent=checked[current]?"Antwort ausgewertet.":"Du kannst deine Antwort vor dem Prüfen ändern.";
+ if(checked[current]) showFeedback();
+}
+function showFeedback(){
+ const q=questions[current], box=$("feedback"), ok=answers[current]===q.correct;
+ box.className="feedback "+(ok?"good":"bad");
+ const h=document.createElement("h3");h.textContent=ok?"Richtig!":"Noch nicht ganz.";
+ const p=document.createElement("p");p.textContent=q.explain;
+ const p2=document.createElement("p");p2.textContent=q.counts;
+ box.replaceChildren(h,p,p2);
+}
+$("answerForm").addEventListener("submit",e=>{
+ e.preventDefault();if(answers[current]===null||checked[current])return;
+ checked[current]=true;render();$("progressBar").style.width=`${(current+1)/questions.length*100}%`;
+});
+$("hintButton").addEventListener("click",()=>{
+ const q=questions[current],box=$("hint");box.textContent="Hinweis: "+q.hint;box.className="feedback";
+});
+$("nextButton").addEventListener("click",()=>{
+ if(current<questions.length-1){current++;render();}else finish();
+});
+function finish(){
+ $("quizCard").classList.add("hidden");$("resultCard").classList.remove("hidden");
+ const score=answers.reduce((sum,a,i)=>sum+(a===questions[i].correct?1:0),0);
+ $("finalScore").textContent=`Du hast ${score} von ${questions.length} Aufgaben richtig beantwortet.`;
+ $("review").innerHTML="";
+ questions.forEach((q,i)=>{
+  const row=document.createElement("div");row.className="summary-row";
+  const title=document.createElement("strong");title.textContent=`${i+1}. ${q.title} `;
+  const pill=document.createElement("span");pill.className="pill";pill.textContent=answers[i]===q.correct?"Richtig":"Falsch";
+  const detail=document.createElement("div");detail.className="small";detail.textContent=`Deine Antwort: ${q.options[answers[i]]} · Lösung: ${q.options[q.correct]}`;
+  row.append(title,pill,detail);$("review").append(row);
+ });
+ $("progressBar").style.width="100%";$("progressText").textContent="Quiz abgeschlossen";
+ $("scoreText").textContent=`${score} von ${questions.length} richtig`;
+}
+$("restartButton").addEventListener("click",()=>{current=0;answers.fill(null);checked.fill(false);$("resultCard").classList.add("hidden");$("quizCard").classList.remove("hidden");render();});
+render();
+</script>
+</body>
+</html>
